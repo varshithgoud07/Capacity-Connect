@@ -1,11 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import os
 from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
 from config import SECRET_KEY
 from database import get_connection, create_tables
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+cloudinary.config(
+    secure=True
+)
 
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -136,26 +141,34 @@ def upload_resume():
         flash("No file selected.")
         return redirect("/dashboard")
 
-    # Create a unique filename
-    filename = session["email"] + "_" + secure_filename(file.filename)
+    try:
+        # Upload to Cloudinary as a raw file (PDF, DOC, DOCX)
+        import uuid
+        result = cloudinary.uploader.upload(
+            file,
+            resource_type="raw",
+            folder="capacity_connect/resumes",
+            public_id=session["email"].replace("@", "_").replace(".", "_")
+        )
 
-    # Save the file
-    file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        resume_url = result["secure_url"]
 
-    # Save filename in PostgreSQL
-    conn = get_connection()
-    cur = conn.cursor()
+        conn = get_connection()
+        cur = conn.cursor()
 
-    cur.execute(
-        "UPDATE users SET resume=%s WHERE email=%s",
-        (filename, session["email"])
-    )
+        cur.execute(
+            "UPDATE users SET resume=%s WHERE email=%s",
+            (resume_url, session["email"])
+        )
 
-    conn.commit()
-    cur.close()
-    conn.close()
+        conn.commit()
+        cur.close()
+        conn.close()
 
-    flash("Resume uploaded successfully!")
+        flash("Resume uploaded successfully!")
+
+    except Exception as e:
+        flash(f"Upload failed: {e}")
 
     return redirect("/dashboard")
 @app.route("/logout")
