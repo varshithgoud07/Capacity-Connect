@@ -208,6 +208,43 @@ Open
 
 <h5>Resume</h5>
 
+{% if resume %}
+
+<div class="alert alert-success">
+
+    ✅ Resume Uploaded Successfully
+
+</div>
+
+<form
+action="/upload_resume"
+method="POST"
+enctype="multipart/form-data">
+
+<input
+type="file"
+name="resume"
+class="form-control mb-3"
+accept=".pdf,.doc,.docx">
+
+<button
+type="submit"
+class="btn btn-warning w-100">
+
+Replace Resume
+
+</button>
+
+</form>
+
+{% else %}
+
+<div class="alert alert-danger">
+
+    ❌ No Resume Uploaded
+
+</div>
+
 <form
 action="/upload_resume"
 method="POST"
@@ -229,6 +266,8 @@ Upload Resume
 </button>
 
 </form>
+
+{% endif %}
 
 </div>
 

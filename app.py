@@ -1,74 +1,39 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import os
 from werkzeug.utils import secure_filename
-
 from config import SECRET_KEY
 from database import get_connection, create_tables
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-# ------------------------
-# Upload Folder
-# ------------------------
-
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 create_tables()
-
-
-# ------------------------
-# Home
-# ------------------------
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-
-# ------------------------
-# Login
-# ------------------------
-
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["GET","POST"])
 def login():
-
-    if request.method == "POST":
-
-        email = request.form["email"]
-        password = request.form["password"]
-
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "SELECT * FROM users WHERE email=? AND password=?",
-            (email, password)
-        )
-
-        user = cursor.fetchone()
-        conn.close()
-
+    if request.method=="POST":
+        email=request.form["email"]
+        password=request.form["password"]
+        conn=get_connection()
+        cur=conn.cursor()
+        cur.execute("SELECT * FROM users WHERE email=%s AND password=%s",(email,password))
+        user=cur.fetchone()
+        cur.close(); conn.close()
         if user:
-            session["name"] = user[1]
-            session["email"] = user[2]
-
-            flash("Welcome back!")
+            session["name"]=user[1]
+            session["email"]=user[2]
             return redirect(url_for("dashboard"))
-
-        flash("Invalid Email or Password")
+        flash("Invalid Email or Password!")
         return redirect(url_for("login"))
-
     return render_template("login.html")
-
-
-# ------------------------
-# Dashboard
-# ------------------------
 
 @app.route("/dashboard")
 def dashboard():
@@ -76,55 +41,37 @@ def dashboard():
     if "email" not in session:
         return redirect(url_for("login"))
 
-    return render_template(
-        "dashboard.html",
-        name=session["name"]
-    )
-
-
-# ------------------------
-# Profile
-# ------------------------
-
-@app.route("/profile")
-def profile():
-
-    if "email" not in session:
-        return redirect(url_for("login"))
-
     conn = get_connection()
-    cursor = conn.cursor()
+    cur = conn.cursor()
 
-    cursor.execute(
-        """
-        SELECT name,email,phone,branch,year,skills
-        FROM users
-        WHERE email=?
-        """,
+    cur.execute(
+        "SELECT resume FROM users WHERE email=%s",
         (session["email"],)
     )
 
-    user = cursor.fetchone()
+    result = cur.fetchone()
+
+    cur.close()
     conn.close()
 
-    if not user:
-        flash("User not found.")
-        return redirect("/dashboard")
+    resume = result[0] if result else None
 
     return render_template(
-        "profile.html",
-        name=user[0],
-        email=user[1],
-        phone=user[2],
-        branch=user[3],
-        year=user[4],
-        skills=user[5]
+        "dashboard.html",
+        name=session["name"],
+        resume=resume
     )
 
-
-# ------------------------
-# Register
-# ------------------------
+@app.route("/profile")
+def profile():
+    if "email" not in session:
+        return redirect(url_for("login"))
+    conn=get_connection(); cur=conn.cursor()
+    cur.execute("SELECT name,email,phone,branch,year,skills FROM users WHERE email=%s",(session["email"],))
+    user=cur.fetchone()
+    cur.close(); conn.close()
+    return render_template("profile.html",
+        name=user[0],email=user[1],phone=user[2],branch=user[3],year=user[4],skills=user[5])
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -136,83 +83,46 @@ def register():
         password = request.form["password"]
 
         conn = get_connection()
-        cursor = conn.cursor()
+        cur = conn.cursor()
 
-        try:
+        # Check if email already exists
+        cur.execute(
+            "SELECT * FROM users WHERE email=%s",
+            (email,)
+        )
 
-            cursor.execute(
-                """
-                INSERT INTO users(name,email,password)
-                VALUES(?,?,?)
-                """,
-                (name, email, password)
-            )
+        existing_user = cur.fetchone()
 
-            conn.commit()
+        if existing_user:
+            cur.close()
+            conn.close()
 
-            flash("Registration Successful! Please Login.")
-
+            flash("An account with this email already exists. Please login.")
             return redirect(url_for("login"))
 
-        except Exception:
+        cur.execute(
+            "INSERT INTO users(name,email,password) VALUES(%s,%s,%s)",
+            (name, email, password)
+        )
 
-            flash("Email already exists!")
+        conn.commit()
+        cur.close()
+        conn.close()
 
-            return redirect(url_for("register"))
-
-        finally:
-            conn.close()
+        flash("Registration successful! Please login.")
+        return redirect(url_for("login"))
 
     return render_template("register.html")
 
-
-# ------------------------
-# Update Profile
-# ------------------------
-
-@app.route("/update_profile", methods=["POST"])
+@app.route("/update_profile",methods=["POST"])
 def update_profile():
-
     if "email" not in session:
         return redirect("/login")
-
-    phone = request.form["phone"]
-    branch = request.form["branch"]
-    year = request.form["year"]
-    skills = request.form["skills"]
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        UPDATE users
-        SET phone=?,
-            branch=?,
-            year=?,
-            skills=?
-        WHERE email=?
-        """,
-        (
-            phone,
-            branch,
-            year,
-            skills,
-            session["email"]
-        )
-    )
-
-    conn.commit()
-    conn.close()
-
-    flash("Profile Updated Successfully!")
-
+    conn=get_connection(); cur=conn.cursor()
+    cur.execute("""UPDATE users SET phone=%s,branch=%s,year=%s,skills=%s WHERE email=%s""",
+        (request.form["phone"],request.form["branch"],request.form["year"],request.form["skills"],session["email"]))
+    conn.commit(); cur.close(); conn.close()
     return redirect("/profile")
-
-
-# ------------------------
-# Resume Upload
-# ------------------------
 
 @app.route("/upload_resume", methods=["POST"])
 def upload_resume():
@@ -220,43 +130,38 @@ def upload_resume():
     if "email" not in session:
         return redirect("/login")
 
-    file = request.files.get("resume")
+    file = request.files["resume"]
 
-    if file is None or file.filename == "":
-        flash("Please select a resume.")
+    if file.filename == "":
+        flash("No file selected.")
         return redirect("/dashboard")
 
-    filename = secure_filename(file.filename)
+    # Create a unique filename
+    filename = session["email"] + "_" + secure_filename(file.filename)
 
-    file.save(
-        os.path.join(
-            app.config["UPLOAD_FOLDER"],
-            filename
-        )
+    # Save the file
+    file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+    # Save filename in PostgreSQL
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        "UPDATE users SET resume=%s WHERE email=%s",
+        (filename, session["email"])
     )
 
-    flash("Resume Uploaded Successfully!")
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    flash("Resume uploaded successfully!")
 
     return redirect("/dashboard")
-
-
-# ------------------------
-# Logout
-# ------------------------
-
 @app.route("/logout")
 def logout():
-
     session.clear()
-
-    flash("Logged out successfully!")
-
     return redirect(url_for("login"))
 
-
-# ------------------------
-# Run App
-# ------------------------
-
-if __name__ == "__main__":
+if __name__=="__main__":
     app.run(debug=True)

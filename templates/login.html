@@ -8,15 +8,23 @@
 
     <title>Student Login</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
 </head>
-
 <body>
 
 <div class="login-box">
 
     <h1>🎓 Student Login</h1>
+    {% with messages = get_flashed_messages() %}
+       {% if messages %}
+         <div class="alert alert-success">
+             {{ messages[0] }}
+         </div>
+       {% endif %}
+    {% endwith %}
 
     <form method="POST">
 
