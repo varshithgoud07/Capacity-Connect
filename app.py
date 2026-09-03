@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import os
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import cloudinary
 import cloudinary.uploader
 from config import SECRET_KEY
@@ -8,6 +9,7 @@ from database import get_connection, create_tables
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+
 cloudinary.config(
     secure=True
 )
@@ -29,10 +31,13 @@ def login():
         password=request.form["password"]
         conn=get_connection()
         cur=conn.cursor()
-        cur.execute("SELECT * FROM users WHERE email=%s AND password=%s",(email,password))
-        user=cur.fetchone()
-        cur.close(); conn.close()
-        if user:
+        cur.execute("SELECT * FROM users WHERE email=%s", (email,))
+        user = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if user and check_password_hash(user[3], password):  
             session["name"]=user[1]
             session["email"]=user[2]
             return redirect(url_for("dashboard"))
@@ -87,6 +92,8 @@ def register():
         email = request.form["email"]
         password = request.form["password"]
 
+        hashed_password = generate_password_hash(password)
+
         conn = get_connection()
         cur = conn.cursor()
 
@@ -107,7 +114,7 @@ def register():
 
         cur.execute(
             "INSERT INTO users(name,email,password) VALUES(%s,%s,%s)",
-            (name, email, password)
+            (name, email, hashed_password)
         )
 
         conn.commit()
