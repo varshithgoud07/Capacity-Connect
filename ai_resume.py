@@ -33,3 +33,28 @@ def extract_resume_text(resume_url):
             text += page_text + "\n"
 
     return text
+
+def analyze_resume(resume_text):
+
+    prompt = f"""
+You are an expert career coach and resume reviewer.
+
+Analyze the following resume and provide:
+
+1. Resume Score (out of 100)
+2. Strengths
+3. Missing Skills
+4. Recommended Job Roles
+5. Resume Improvement Suggestions
+
+Resume:
+
+{resume_text}
+"""
+
+    response = client.models.generate_content(
+        model="gemini-3.6-flash",
+        contents=prompt
+    )
+
+    return response.text

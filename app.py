@@ -6,7 +6,7 @@ import cloudinary
 import cloudinary.uploader
 from config import SECRET_KEY
 from database import get_connection, create_tables
-from ai_resume import extract_resume_text
+from ai_resume import extract_resume_text, analyze_resume
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -208,5 +208,35 @@ def test_resume():
     text = extract_resume_text(result[0])
 
     return f"<pre>{text}</pre>"
+@app.route("/resume_analysis")
+def resume_analysis():
+
+    if "email" not in session:
+        return redirect("/login")
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT resume FROM users WHERE email=%s",
+        (session["email"],)
+    )
+
+    result = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if not result or not result[0]:
+        return "No resume uploaded."
+
+    resume_text = extract_resume_text(result[0])
+
+    if not resume_text:
+        return "Could not read the resume."
+
+    analysis = analyze_resume(resume_text)
+
+    return f"<pre>{analysis}</pre>"
 if __name__=="__main__":
     app.run(debug=True)
