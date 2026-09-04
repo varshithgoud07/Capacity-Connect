@@ -1,6 +1,7 @@
 import io
 import requests
 import os
+import json
 from google import genai
 from pypdf import PdfReader
 
@@ -37,15 +38,27 @@ def extract_resume_text(resume_url):
 def analyze_resume(resume_text):
 
     prompt = f"""
-You are an expert career coach and resume reviewer.
+You are an expert ATS Resume Analyzer.
 
-Analyze the following resume and provide:
+Analyze the following resume.
 
-1. Resume Score (out of 100)
-2. Strengths
-3. Missing Skills
-4. Recommended Job Roles
-5. Resume Improvement Suggestions
+Return ONLY valid JSON.
+
+Do NOT add markdown.
+Do NOT add explanation.
+Do NOT use ```json.
+Return only the JSON object.
+
+The JSON format must be:
+
+{{
+    "score": 0,
+    "ats_score": 0,
+    "strengths": [],
+    "missing_skills": [],
+    "recommended_roles": [],
+    "suggestions": []
+}}
 
 Resume:
 
@@ -57,4 +70,4 @@ Resume:
         contents=prompt
     )
 
-    return response.text
+    return json.loads(response.text)

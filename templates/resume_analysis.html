@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>AI Resume Analysis</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+
+<style>
+
+body{
+    background:#eef2f7;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+.container{
+    max-width:1100px;
+    margin-top:40px;
+    margin-bottom:40px;
+}
+
+.card{
+    border:none;
+    border-radius:18px;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+}
+
+.score{
+    font-size:70px;
+    font-weight:bold;
+    color:#0d6efd;
+}
+
+.badge-skill{
+    margin:6px;
+    padding:10px 14px;
+    font-size:15px;
+}
+
+.section-title{
+    font-weight:bold;
+    margin-bottom:20px;
+}
+
+.progress{
+    height:28px;
+}
+
+.list-group-item{
+    border:none;
+    padding:12px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card p-4">
+
+<div class="d-flex justify-content-between align-items-center">
+
+<div>
+<h2>🤖 AI Resume Analysis</h2>
+<p class="text-muted">
+Welcome {{ name }}
+</p>
+</div>
+
+<a href="/dashboard" class="btn btn-primary">
+Back to Dashboard
+</a>
+
+</div>
+
+<hr>
+
+<div class="text-center">
+
+<h4>Resume Score</h4>
+
+<div class="score">
+{{ analysis.score }}/100
+</div>
+
+</div>
+
+<br>
+
+<h5>ATS Compatibility</h5>
+
+<div class="progress">
+
+<div
+class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+style="width: {{ analysis.ats_score }}%;">
+
+{{ analysis.ats_score }}%
+
+</div>
+
+</div>
+
+<br>
+
+<div class="row">
+
+<div class="col-md-6">
+
+<div class="card p-3 mb-4">
+
+<h4 class="section-title">
+💪 Strengths
+</h4>
+
+<ul class="list-group">
+
+{% for item in analysis.strengths %}
+
+<li class="list-group-item">
+
+✅ {{ item }}
+
+</li>
+
+{% endfor %}
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="col-md-6">
+
+<div class="card p-3 mb-4">
+
+<h4 class="section-title">
+⚠ Missing Skills
+</h4>
+
+{% for item in analysis.missing_skills %}
+
+<span class="badge bg-danger badge-skill">
+
+{{ item }}
+
+</span>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+</div>
+
+<div class="card p-4 mb-4">
+
+<h4 class="section-title">
+💼 Recommended Job Roles
+</h4>
+
+<div class="row">
+
+{% for role in analysis.recommended_roles %}
+
+<div class="col-md-4 mb-3">
+
+<div class="card text-center p-3">
+
+<h5>
+
+{{ role }}
+
+</h5>
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+<div class="card p-4">
+
+<h4 class="section-title">
+🚀 Improvement Suggestions
+</h4>
+
+<ol>
+
+{% for tip in analysis.suggestions %}
+
+<li class="mb-2">
+
+{{ tip }}
+
+</li>
+
+{% endfor %}
+
+</ol>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

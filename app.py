@@ -237,6 +237,10 @@ def resume_analysis():
 
     analysis = analyze_resume(resume_text)
 
-    return f"<pre>{analysis}</pre>"
+    return render_template(
+       "resume_analysis.html",
+        analysis=analysis,
+        name=session["name"]
+    )
 if __name__=="__main__":
     app.run(debug=True)
