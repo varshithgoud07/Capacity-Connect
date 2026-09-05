@@ -69,6 +69,23 @@ body{
 
 <div>
 <h2>🤖 AI Resume Analysis</h2>
+{% if analysis.analysis_type == "AI + ATS Analysis" %}
+
+<div class="alert alert-success mt-2">
+    <i class="fa-solid fa-circle-check"></i>
+    <strong>Analysis Mode:</strong> {{ analysis.analysis_type }}
+</div>
+
+{% else %}
+
+<div class="alert alert-warning mt-2">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <strong>Analysis Mode:</strong> {{ analysis.analysis_type }}
+    <br>
+    AI service is currently unavailable. Results are generated using the built-in ATS engine.
+</div>
+
+{% endif %}
 <p class="text-muted">
 Welcome {{ name }}
 </p>
