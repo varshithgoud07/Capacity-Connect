@@ -242,5 +242,38 @@ def resume_analysis():
         analysis=analysis,
         name=session["name"]
     )
+@app.route("/jobs")
+def jobs():
+    return render_template("coming_soon.html",
+                           title="Jobs",
+                           message="Job Portal is under development.")
+
+
+@app.route("/saved_jobs")
+def saved_jobs():
+    return render_template("coming_soon.html",
+                           title="Saved Jobs",
+                           message="Saved Jobs module is under development.")
+
+
+@app.route("/applications")
+def applications():
+    return render_template("coming_soon.html",
+                           title="Applications",
+                           message="Application Tracker is under development.")
+
+
+@app.route("/analytics")
+def analytics():
+    return render_template("coming_soon.html",
+                           title="Analytics",
+                           message="Analytics Dashboard is under development.")
+
+
+@app.route("/settings")
+def settings():
+    return render_template("coming_soon.html",
+                           title="Settings",
+                           message="Settings page is under development.")
 if __name__=="__main__":
     app.run(debug=True)

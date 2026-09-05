@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+
+    <style>
+        body{
+            font-family:Arial,sans-serif;
+            background:#f4f7fb;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            margin:0;
+        }
+
+        .card{
+            background:white;
+            padding:40px;
+            border-radius:15px;
+            box-shadow:0 8px 25px rgba(0,0,0,.12);
+            text-align:center;
+            width:450px;
+        }
+
+        h1{
+            color:#1e88e5;
+            margin-bottom:15px;
+        }
+
+        p{
+            color:#555;
+            font-size:18px;
+        }
+
+        a{
+            display:inline-block;
+            margin-top:25px;
+            text-decoration:none;
+            background:#1e88e5;
+            color:white;
+            padding:12px 25px;
+            border-radius:8px;
+        }
+
+        a:hover{
+            background:#1565c0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h1>{{ title }}</h1>
+
+    <p>{{ message }}</p>
+
+    <a href="/dashboard">⬅ Back to Dashboard</a>
+
+</div>
+
+</body>
+</html>

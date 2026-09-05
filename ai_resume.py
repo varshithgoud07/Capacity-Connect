@@ -4,6 +4,8 @@ import os
 import json
 from google import genai
 from pypdf import PdfReader
+from dotenv import load_dotenv
+load_dotenv()
 
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
@@ -35,39 +37,30 @@ def extract_resume_text(resume_url):
 
     return text
 
+from google.genai.errors import ClientError
+import json
+
 def analyze_resume(resume_text):
-
     prompt = f"""
-You are an expert ATS Resume Analyzer.
+    ...
+    """
 
-Analyze the following resume.
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=prompt
+        )
 
-Return ONLY valid JSON.
+        return json.loads(response.text)
 
-Do NOT add markdown.
-Do NOT add explanation.
-Do NOT use ```json.
-Return only the JSON object.
-
-The JSON format must be:
-
-{{
-    "score": 0,
-    "ats_score": 0,
-    "strengths": [],
-    "missing_skills": [],
-    "recommended_roles": [],
-    "suggestions": []
-}}
-
-Resume:
-
-{resume_text}
-"""
-
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=prompt
-    )
-
-    return json.loads(response.text)
+    except ClientError:
+        return {
+            "score": 0,
+            "ats_score": 0,
+            "strengths": [],
+            "missing_skills": [],
+            "recommended_roles": [],
+            "suggestions": [
+                "Gemini API quota exceeded. Please try again later."
+            ]
+        }
